@@ -1,0 +1,172 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_stata(r"C:\Users\pacha\Downloads\ICPSR_36151-V6\ICPSR_36151\DS0011\36151-0011-Data.dta")
+
+
+
+#print(df.columns)
+
+residence = (df.loc[:,'TH23'])
+
+residence = residence.dropna()
+
+why = (df.loc[:,'TH26'])
+
+why = pd.DataFrame(why)
+
+whycol = pd.Series(data=why.index)
+
+
+#print(why)
+
+#print(residence)
+
+occupation = df.loc[:,'TH18']
+
+occupation = occupation.dropna()
+
+#print(occupation)
+
+stateid = (df.loc[:, 'STATEID'])
+
+
+residence = (df.loc[:, 'TH23'])
+
+
+#converting to dataframe
+
+residence = pd.DataFrame(residence)
+stateid = pd.DataFrame(stateid)
+
+#print(residence)
+
+#print(stateid)
+
+#setting the index
+
+rescol = pd.Series(data=residence.index)
+statecol = pd.Series(data=stateid.index)
+
+residence.insert(0, "rescol", rescol)
+
+stateid.insert(0, "statecol", statecol)
+
+why.insert(0, "whycol", whycol)
+
+
+
+#print(rescol)
+
+#merging the stateid and residence
+
+stnres = residence.merge(stateid, left_on="rescol", right_on="statecol")
+
+stnres = stnres.merge(why, left_on="rescol", right_on="whycol")
+
+
+#print(stnres)
+
+
+
+
+#print(stnres)
+
+#to calculate no. of people in a different state
+
+abroad = (stnres.loc[:,"TH23"] == "Abroad 3")
+
+#print(abroad.describe())  #we get the no. of entries that are false, that is people who are in the same state or a different state but not abroad
+
+
+same = (stnres.loc[:,"TH23"] == "Same state 1")
+
+#print(same.describe())  #we get the no. of people in the same state
+
+#subtracting the no. of people in the same state from the no. of people not gone abroad we get the no. of people who have moved to a different state
+
+#other state converting to boolean
+
+another = (stnres.loc[:,'TH23'] == "Another state 2")
+
+another = pd.DataFrame(another)
+
+df = pd.DataFrame()
+
+l = []
+
+
+for i in range(215753):
+
+    if stnres.loc[i,'TH23'] == "Another state 2":
+        l.append(i)
+
+    else :
+     continue
+
+
+
+#print(l[])
+
+#dropping na valued rows of stnres will create problems if one column is valid and another is invalid
+
+#print(stnres.loc[2419, :])
+
+state = []
+reason=[]
+
+for i in range(5025):
+
+   state.append(stnres.loc[l[i], 'STATEID'])
+
+   reason.append(stnres.loc[l[i], 'TH26'])
+
+
+#print(o)
+
+state = pd.DataFrame(state)
+
+#print(state.index)
+
+stind = pd.Series(data=state.index)
+
+reason = pd.DataFrame(reason)
+
+resind = pd.Series(data=reason.index)
+
+state.insert(0,"stind", stind)
+
+reason.insert(0, "resind", resind)
+
+#print(state)
+
+
+migration = state.merge(reason, left_on="stind", right_on="resind")
+
+#print(migration)
+
+#print(migration["0_y"].info())
+
+#we are not dropping missing values as the indexes will not remain uniform
+
+
+#print(migration)          #we now have the state id matched with the reason for migration in inter state migration
+
+#print(migration["0_y"].describe())
+
+up=[]
+
+for i in range(5024):
+    if (migration.loc[i, "0_x"] == "Uttar Pradesh 09"):
+        up.append(migration.loc[i,"0_y"])
+    else:
+        continue
+
+up = pd.DataFrame(up)
+
+up = up.dropna()
+
+c = up.value_counts()
+
+print(c)
+
